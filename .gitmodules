@@ -1,0 +1,3 @@
+[submodule "plugins/mk-project"]
+	path = plugins/mk-project
+	url = https://github.com/mattkeller/mk-project.git
