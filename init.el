@@ -20,3 +20,4 @@
 (require 'my-packages)
 (require 'my-colors)
 (require 'my-projects)
+(require 'my-moving)
