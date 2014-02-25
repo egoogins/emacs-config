@@ -13,6 +13,7 @@
 		      flycheck
 		      jedi
 		      python
+		      magit
 		      )
   "A list of packages to ensure are installed at launch.")
 

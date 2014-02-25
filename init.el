@@ -21,12 +21,12 @@
 ;; Initialize melpa and marmalade
 (package-initialize)
 
-
 (require 'my-packages)
 (require 'my-colors)
 (require 'my-projects)
 (require 'my-moving)
 (require 'my-modes)
+(require 'my-vcs)
 (require 'my-editing)
 (require 'my-languages)
 ;;; init.el ends here
