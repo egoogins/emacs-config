@@ -1,3 +1,9 @@
+;;; package -- Summary
+;;; Commentary:
+
+;;; Code:
+
+
 ;; Require cl-lib to allow for latest emacs features
 (require 'cl-lib)
 (defvar my-packages '(
