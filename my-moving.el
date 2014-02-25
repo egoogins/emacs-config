@@ -9,8 +9,8 @@
 (setq lazy-lock-defer-on-scrolling t)
 (setq lazy-lock-continuity-time 0.3)
 
-;; Don't insert new lines when scrolling???
-;; (setq next-line-add-newlines nil)
+;; Use ido-mode to navigate files
+(ido-mode t)
 
 (provide 'my-moving)
 ;;; my-moving.el ends here
