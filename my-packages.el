@@ -3,6 +3,7 @@
 (defvar my-packages '(
 		      color-theme
 		      color-theme-solarized
+		      flycheck
 		      )
   "A list of packages to ensure are installed at launch.")
 

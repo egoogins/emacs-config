@@ -21,3 +21,4 @@
 (require 'my-colors)
 (require 'my-projects)
 (require 'my-moving)
+(require 'my-editing)
