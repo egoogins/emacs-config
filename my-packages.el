@@ -1,9 +1,12 @@
 ;; Require cl-lib to allow for latest emacs features
 (require 'cl-lib)
 (defvar my-packages '(
+		      autopair
 		      color-theme
 		      color-theme-solarized
 		      flycheck
+		      jedi
+		      python
 		      )
   "A list of packages to ensure are installed at launch.")
 

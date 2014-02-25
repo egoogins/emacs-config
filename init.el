@@ -17,8 +17,14 @@
 ;; Initialize melpa and marmalade
 (package-initialize)
 
+;; disable auto-save and auto-backup
+(setq auto-save-default nil)
+(setq make-backup-files nil)
+
 (require 'my-packages)
 (require 'my-colors)
 (require 'my-projects)
 (require 'my-moving)
+(require 'my-modes)
 (require 'my-editing)
+(require 'my-languages)
