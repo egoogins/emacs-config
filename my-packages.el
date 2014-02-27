@@ -13,6 +13,7 @@
 		      color-theme-solarized
 		      flycheck
 		      jedi
+		      popup
 		      magit
 		      )
   "A list of packages to ensure are installed at launch.")
