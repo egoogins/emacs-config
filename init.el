@@ -23,7 +23,6 @@
 
 (require 'my-packages)
 (require 'my-colors)
-(require 'my-projects)
 (require 'my-moving)
 (require 'my-modes)
 (require 'my-vcs)
