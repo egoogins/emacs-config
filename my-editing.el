@@ -25,5 +25,9 @@
 (require 'flycheck)
 (add-hook 'after-init-hook #'global-flycheck-mode)
 
+;; Use autopair in all supported files
+(require 'autopair)
+(autopair-global-mode)
+
 (provide 'my-editing)
 ;;; my-editing.el ends here
