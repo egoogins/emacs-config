@@ -8,6 +8,7 @@
 (require 'cl-lib)
 (defvar my-packages '(
 		      autopair
+		      auto-complete
 		      color-theme
 		      color-theme-solarized
 		      flycheck
