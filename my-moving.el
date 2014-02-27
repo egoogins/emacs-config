@@ -1,4 +1,10 @@
-;; ----Moving Around ;;
+;;; package -- Summary
+;;; Describe movement and selection in Emacs
+
+;;; Commentary:
+
+;;; Code:
+
 ;; Scroll one line at a time
 (setq scroll-step 1)
 

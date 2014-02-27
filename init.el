@@ -23,9 +23,9 @@
 
 (require 'my-packages)
 (require 'my-colors)
-(require 'my-moving)
-(require 'my-modes)
 (require 'my-vcs)
 (require 'my-editing)
 (require 'my-languages)
+(require 'my-moving)
+(require 'my-modes)
 ;;; init.el ends here
