@@ -28,4 +28,5 @@
 (require 'my-languages)
 (require 'my-moving)
 (require 'my-modes)
+(require 'my-optimization)
 ;;; init.el ends here

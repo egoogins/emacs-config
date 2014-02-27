@@ -11,6 +11,7 @@
 		      auto-complete
 		      color-theme
 		      color-theme-solarized
+		      flx-ido
 		      flycheck
 		      jedi
 		      popup

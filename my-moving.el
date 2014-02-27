@@ -19,8 +19,13 @@
 (setq lazy-lock-defer-on-scrolling t)
 (setq lazy-lock-continuity-time 0.3)
 
-;; Use ido-mode to navigate files
-(ido-mode t)
+;; Use ido-mode to navigate files (but the fixed version!)
+(require 'flx-ido)
+(ido-mode 1)
+(ido-everywhere 1)
+(flx-ido-mode 1)
+;; disable ido faces to see flx highlights
+(setq ido-use-faces nil)
 
 (provide 'my-moving)
 ;;; my-moving.el ends here

@@ -5,7 +5,6 @@
 
 (defun ej-python-mode ()
   (interactive)
-  (ido-mode)
   (python-mode)
   (subword-mode)
   (setq tab-width 4)
