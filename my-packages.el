@@ -14,6 +14,7 @@
 		      flx-ido
 		      flycheck
 		      jedi
+		      paren
 		      popup
 		      magit
 		      )

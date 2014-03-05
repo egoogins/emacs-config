@@ -20,12 +20,7 @@
 ;; -- Cite: http://www.emacswiki.org/emacs/AutoIndentation#toc2 --
 
 ;; Autoindent newlines
-(defun set-newline-and-indent ()
-  (local-set-key (kbd "RET") 'newline-and-indent))
-(add-hook 'lisp-mode-hook 'set-newline-and-indent)
-
-;; Indent on 'electric' keys
-(electric-indent-mode 1)
+(define-key global-map (kbd "RET") 'newline-and-indent)
 
 ;; Auto-indent pasted/yanked code
 (dolist (command '(yank yank-pop))
@@ -42,6 +37,13 @@
                    (indent-region (region-beginning) (region-end) nil))))))
 
 ;; -- End Cite
+
+;; Show matching paren (and change its color)
+(show-paren-mode 1)
+(require 'paren)
+(set-face-background 'show-paren-match (face-background 'default))
+(set-face-foreground 'show-paren-match "#def")
+(set-face-attribute 'show-paren-match nil :weight 'extra-bold)
 
 ;; Delete any trailing whitespace before saving
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
