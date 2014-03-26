@@ -15,9 +15,21 @@
   (projectile-global-mode)
 )
 
+(defun ej-groovy-mode ()
+  (global-font-lock-mode 1)
+  (groovy-mode)
+  (groovy-electric)
+  (subword-mode)
+  (setq tab-width 4)
+  (setq c-basic-offset 4)
+  (setq indent-tabs-mode nil)
+)
+
 ;;; Set the modes as default for the appropriate files
 (add-to-list 'auto-mode-alist '("\\.py\\'" . ej-python-mode))
+(add-to-list 'auto-mode-alist '("\.groovy$" . ej-groovy-mode))
 (add-to-list 'interpreter-mode-alist '("python" . ej-python-mode))
+(add-to-list 'interpreter-mode-alist '("groovy" . groovy-mode))
 
 (setq whitespace-style (quote (face tabs trailing space-before-tab tab-mark lines)))
 (setq windmove-wrap-around t)

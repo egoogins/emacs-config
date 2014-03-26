@@ -13,6 +13,7 @@
 		      color-theme-solarized
 		      flx-ido
 		      flycheck
+		      groovy-mode
 		      jedi
 		      paren
 		      popup
