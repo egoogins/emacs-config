@@ -3,6 +3,7 @@
 
 ;;; Code:
 
+(require 'flycheck-google-cpplint)
 (defun ej-python-mode ()
   (interactive)
   (python-mode) ; Enabled key bindings here:
@@ -32,14 +33,16 @@
 
 (defun ej-c++-mode ()
   (interactive)
+  (c++-mode)
   (subword-mode)
   (setq tab-width 4)
-  (which-function-mode 1)
   (setq c-basic-offset 4)
+  (setq compile-command "make -j24 -C ~/fmvot/build zeusrunner")
+  (which-function-mode 1)
   (setq indent-tabs-mode nil)
   (whitespace-mode 1)
   (projectile-global-mode)
-
+  (flycheck-mode)
 )
 
 ;;; Set the modes as default for the appropriate files
