@@ -1,0 +1,13 @@
+This only exists to provide basic setup instructions
+
+Python:
+  I use jedi to analyze my python. It's a little anoying to setup on computers.
+  jedi needs virtual-env
+    virtual-env is installed with pip
+      pip is installed with apt-get
+  So: sudo apt-get install python-pip && sudo pip install virtual-env
+  should allow jedi to work? Just guessing...
+
+C++:
+  To enforce codestyle, I'm trying a couple things.
+    If flymake-google-cpplint works: https://github.com/senda-akiha/flymake-google-cpplint
