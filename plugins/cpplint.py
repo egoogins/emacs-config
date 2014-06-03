@@ -632,6 +632,10 @@ class _IncludeState(dict):
       error message describing what's wrong.
 
     """
+
+    # Disable until updated for fmvot
+    return ""
+
     error_message = ('Found %s after %s' %
                      (self._TYPE_NAMES[header_type],
                       self._SECTION_NAMES[self._section]))
@@ -1363,11 +1367,11 @@ def CheckForCopyright(filename, lines, error):
   # We'll say it should occur by line 10. Don't forget there's a
   # dummy line at the front.
   for line in xrange(1, min(len(lines), 11)):
-    if re.search(r'Copyright', lines[line], re.I): break
+    if re.search(r'NOTICE', lines[line], re.I): break
   else:                       # means no copyright line was found
     error(filename, 0, 'legal/copyright', 5,
           'No copyright message found.  '
-          'You should have a line: "Copyright [year] <Copyright Owner>"')
+          'You should have a line: "NOTICE" prepending a copyright')
 
 
 def GetHeaderGuardCPPVariable(filename):
@@ -1389,9 +1393,16 @@ def GetHeaderGuardCPPVariable(filename):
 
   fileinfo = FileInfo(filename)
   file_path_from_root = fileinfo.RepositoryName()
-  if _root:
-    file_path_from_root = re.sub('^' + _root + os.sep, '', file_path_from_root)
-  return re.sub(r'[-./\s]', '_', file_path_from_root).upper() + '_'
+
+  # Format: libs/lib___/[___ or src]/path.../file
+  # Ignore libs and [___ or src]
+  parts = file_path_from_root.split('/')
+  if len(parts) >= 3:
+    del parts[2] # delete [___ or src]
+    del parts[0] # delete libs
+  file_path_from_root = '/'.join(parts)
+
+  return re.sub(r'[-./\s]', '_', file_path_from_root).upper()
 
 
 def CheckForHeaderGuard(filename, lines, error):
@@ -1458,9 +1469,9 @@ def CheckForHeaderGuard(filename, lines, error):
           cppvar)
     return
 
-  if endif != ('#endif  // %s' % cppvar):
+  if endif != ('#endif // %s' % cppvar):
     error_level = 0
-    if endif != ('#endif  // %s' % (cppvar + '_')):
+    if endif != ('#endif // %s' % (cppvar)):
       error_level = 5
 
     ParseNolintSuppressions(filename, lines[endif_linenum], endif_linenum,
@@ -1745,46 +1756,21 @@ class _NamespaceInfo(_BlockInfo):
     """Check end of namespace comments."""
     line = clean_lines.raw_lines[linenum]
 
-    # Check how many lines is enclosed in this namespace.  Don't issue
-    # warning for missing namespace comments if there aren't enough
-    # lines.  However, do apply checks if there is already an end of
-    # namespace comment and it's incorrect.
-    #
-    # TODO(unknown): We always want to check end of namespace comments
-    # if a namespace is large, but sometimes we also want to apply the
-    # check if a short namespace contained nontrivial things (something
-    # other than forward declarations).  There is currently no logic on
-    # deciding what these nontrivial things are, so this check is
-    # triggered by namespace size only, which works most of the time.
-    if (linenum - self.starting_linenum < 10
-        and not Match(r'};*\s*(//|/\*).*\bnamespace\b', line)):
-      return
-
     # Look for matching comment at end of namespace.
     #
-    # Note that we accept C style "/* */" comments for terminating
-    # namespaces, so that code that terminate namespaces inside
-    # preprocessor macros can be cpplint clean.
-    #
-    # We also accept stuff like "// end of namespace <name>." with the
-    # period at the end.
-    #
-    # Besides these, we don't accept anything else, otherwise we might
-    # get false negatives when existing comment is a substring of the
-    # expected namespace.
+    # We accept only "// <name>"
     if self.name:
       # Named namespace
-      if not Match((r'};*\s*(//|/\*).*\bnamespace\s+' + re.escape(self.name) +
-                    r'[\*/\.\\\s]*$'),
+      if not Match((r'};*\s*//.' + re.escape(self.name) + r'.*$'),
                    line):
         error(filename, linenum, 'readability/namespace', 5,
-              'Namespace should be terminated with "// namespace %s"' %
+              'Namespace should be terminated with "// %s"' %
               self.name)
     else:
       # Anonymous namespace
-      if not Match(r'};*\s*(//|/\*).*\bnamespace[\*/\.\\\s]*$', line):
+      if not Match(r'};*\s*//.anonymous', line):
         error(filename, linenum, 'readability/namespace', 5,
-              'Namespace should be terminated with "// namespace"')
+              'Namespace should be terminated with "// anonymous"')
 
 
 class _PreprocessorInfo(object):
@@ -1993,10 +1979,10 @@ class _NestingState(object):
       if access_match:
         classinfo.access = access_match.group(2)
 
-        # Check that access keywords are indented +1 space.  Skip this
+        # Check that access keywords are not indented. Skip this
         # check if the keywords are not preceded by whitespaces.
         indent = access_match.group(1)
-        if (len(indent) != classinfo.class_indent + 1 and
+        if (len(indent) != classinfo.class_indent and
             Match(r'^\s*$', indent)):
           if classinfo.is_struct:
             parent = 'struct ' + classinfo.name
@@ -2006,7 +1992,7 @@ class _NestingState(object):
           if access_match.group(3):
             slots = access_match.group(3)
           error(filename, linenum, 'whitespace/indent', 3,
-                '%s%s: should be indented +1 space inside %s' % (
+                '%s%s: should be not be indented inside %s' % (
                     access_match.group(2), slots, parent))
 
     # Consume braces or semicolons from what's left of the line
@@ -2537,6 +2523,10 @@ def CheckSpacing(filename, clean_lines, linenum, nesting_state, error):
   line, don't end a function with a blank line, don't add a blank line
   after public/protected/private, don't have too many blank lines in a row.
 
+  MITRE:
+   *,& as type* varname and never type * var or type *var
+   No duplicate empty lines
+
   Args:
     filename: The name of the current file.
     clean_lines: A CleansedLines instance containing the file.
@@ -2551,6 +2541,31 @@ def CheckSpacing(filename, clean_lines, linenum, nesting_state, error):
   # raw strings,
   raw = clean_lines.lines_without_raw_strings
   line = raw[linenum]
+
+  ## MITRE Section ##
+
+  # Only check * and & alignments outside of comments
+  if '*' in clean_lines.elided[linenum] or '&' in clean_lines.elided[linenum]:
+    print "check line: " + line
+    match = Search(r'(\s[*&])', line)
+    if match:
+      error(filename, linenum, 'whitespace/operator', 4,
+            'Should not have a space before * or &')
+
+    match = Search(r'([*&][\S])', line)
+    if match:
+      error(filename, linenum, 'whitespace/operator', 4,
+            'Should have a space after * or &')
+
+
+  # Warn if two newlines in a row
+  if (IsBlankLine(line)
+      and linenum > 0
+      and IsBlankLine(raw[linenum -1])):
+    error(filename, linenum, 'whitespace/blank_line', 4,
+          'Multiple empty lines should be rarely used')
+
+  ## End MITRE Section ##
 
   # Before nixing comments, check if the line is blank for no good
   # reason.  This includes the first line after a block is opened, and
@@ -2639,9 +2654,9 @@ def CheckSpacing(filename, clean_lines, linenum, nesting_state, error):
           ((commentpos >= 1 and
             line[commentpos-1] not in string.whitespace) or
            (commentpos >= 2 and
-            line[commentpos-2] not in string.whitespace))):
+            line[commentpos-1] not in string.whitespace))):
         error(filename, linenum, 'whitespace/comments', 2,
-              'At least two spaces is best between code and comments')
+              'At least one space is best between code and comments')
       # There should always be a space between the // and the comment
       commentend = commentpos + 2
       if commentend < len(line) and not line[commentend] == ' ':
@@ -2751,6 +2766,19 @@ def CheckSpacing(filename, clean_lines, linenum, nesting_state, error):
   if match:
     error(filename, linenum, 'whitespace/parens', 5,
           'Missing space before ( in %s' % match.group(1))
+
+  # spaces should come before an assignment
+  match = Search(r'((?!(?<=[\s+-/*!=]))=)', line)
+  if match:
+    print "matched: " + line
+    error(filename, linenum, 'whitespace/operators', 5,
+          'Missing space before assignment in %s' % match.group(1))
+
+  match = Search(r'(=(?![\s=]))', line)
+  if match and not Search(r'=$', line):
+    print "match: " + line
+    error(filename, linenum, 'whitespace/operators', 5,
+          'Missing space after assignment in %s' % match.group(1))
 
   # For if/for/while/switch, the left and right parens should be
   # consistent about how many spaces are inside the parens, and
@@ -2954,6 +2982,24 @@ def GetPreviousNonBlankLine(clean_lines, linenum):
   return ('', -1)
 
 
+def CouldBeFunction(clean_lines, line, linenum):
+  """Attempts to determine if line is a function decleration
+     Guess by seeing if return type, funcname, () is followed
+
+  Args:
+    clean_lines: A CleansedLines instance containing the file.
+    line: The line the heuristic is analyzing
+    linenum: The number of the line to check.
+  """
+  if Match(r'\A\s*\S+\s\S+\(.*\)', line):
+    return True
+  else:
+    if ')' in line and not '(' in line:
+      if linenum > 0:
+        return CouldBeFunction(clean_lines,
+                               clean_lines.lines[linenum-1] + line, linenum-1)
+    return False
+
 def CheckBraces(filename, clean_lines, linenum, error):
   """Looks for misplaced braces (e.g. at the end of line).
 
@@ -2975,15 +3021,23 @@ def CheckBraces(filename, clean_lines, linenum, error):
     # the previous non-blank line is ',', ';', ':', '(', '{', or '}', or if the
     # previous line starts a preprocessor block.
     prevline = GetPreviousNonBlankLine(clean_lines, linenum)[0]
+
     if (not Search(r'[,;:}{(]\s*$', prevline) and
-        not Match(r'\s*#', prevline)):
+        not Match(r'\s*#', prevline) and
+        not CouldBeFunction(clean_lines, prevline, linenum - 1)):
       error(filename, linenum, 'whitespace/braces', 4,
             '{ should almost always be at the end of the previous line')
+
+  if Match(r'.*\S+.*{$', line):
+    # Warn if open brace ending line could be after a function
+    if CouldBeFunction(clean_lines, line.split('{')[0], linenum):
+      error(filename, linenum, 'whitespace/braces', 3,
+            '{ should not appear on the same line as a function definition')
 
   # An else clause should be on the same line as the preceding closing brace.
   if Match(r'\s*else\s*', line):
     prevline = GetPreviousNonBlankLine(clean_lines, linenum)[0]
-    if Match(r'\s*}\s*$', prevline):
+    if Match(r'.*}\s*$', prevline):
       error(filename, linenum, 'whitespace/newline', 4,
             'An else should appear on the same line as the preceding }')
 
@@ -3626,17 +3680,6 @@ def CheckIncludeLine(filename, clean_lines, linenum, include_state, error):
               'Include "%s" not in alphabetical order' % include)
       include_state.SetLastHeader(canonical_include)
 
-  # Look for any of the stream classes that are part of standard C++.
-  match = _RE_PATTERN_INCLUDE.match(line)
-  if match:
-    include = match.group(2)
-    if Match(r'(f|ind|io|i|o|parse|pf|stdio|str|)?stream$', include):
-      # Many unit tests use cout, so we exempt them.
-      if not _IsTestFilename(filename):
-        error(filename, linenum, 'readability/streams', 3,
-              'Streams are highly discouraged.')
-
-
 def _GetTextInside(text, start_pattern):
   r"""Retrieves all the text between matching open and close parentheses.
 
@@ -4121,16 +4164,6 @@ def CheckForNonConstReference(filename, clean_lines, linenum,
           Search(whitelisted_functions, clean_lines.elided[linenum - i - 1])):
         check_params = False
         break
-
-  if check_params:
-    decls = ReplaceAll(r'{[^}]*}', ' ', line)  # exclude function body
-    for parameter in re.findall(_RE_PATTERN_REF_PARAM, decls):
-      if not Match(_RE_PATTERN_CONST_REF_PARAM, parameter):
-        error(filename, linenum, 'runtime/references', 2,
-              'Is this a non-const reference? '
-              'If so, make const or use a pointer: ' +
-              ReplaceAll(' *<', '<', parameter))
-
 
 def CheckCStyleCast(filename, linenum, line, raw_line, cast_type, pattern,
                     error):
