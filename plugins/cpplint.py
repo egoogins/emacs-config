@@ -2544,15 +2544,21 @@ def CheckSpacing(filename, clean_lines, linenum, nesting_state, error):
 
   ## MITRE Section ##
 
-  # Only check * and & alignments outside of comments
-  if '*' in clean_lines.elided[linenum] or '&' in clean_lines.elided[linenum]:
-    print "check line: " + line
-    match = Search(r'(\s[*&])', line)
+  and_and = '&&' in line
+  math = Search(r'.*=.*\*', line)
+  boolean = Search(r'(\(\S+\s&\s\S+\))', line)
+  should_check_line = '*' in clean_lines.elided[linenum] or '&' in clean_lines.elided[linenum]
+
+  # Only check * and & alignments outside of comments, when & is not
+  # acting on booleans, and in lines without &&
+  if should_check_line and not and_and and not boolean and not math:
+    # If prepended by =, or return, * is acting on following variable
+    match = Search(r'[^=,<](?<!return)\s[*&]', line)
     if match:
       error(filename, linenum, 'whitespace/operator', 4,
             'Should not have a space before * or &')
 
-    match = Search(r'([*&][\S])', line)
+    match = Search(r'(?<![=,<]\s)(?<![(])(?<!return\s)([*&][^\s),])', line)
     if match:
       error(filename, linenum, 'whitespace/operator', 4,
             'Should have a space after * or &')
@@ -2768,7 +2774,7 @@ def CheckSpacing(filename, clean_lines, linenum, nesting_state, error):
           'Missing space before ( in %s' % match.group(1))
 
   # spaces should come before an assignment
-  match = Search(r'((?!(?<=[\s+-/*!=]))=)', line)
+  match = Search(r'((?!(?<=[\s+-/*!=><]))=)', line)
   if match:
     print "matched: " + line
     error(filename, linenum, 'whitespace/operators', 5,
@@ -2991,13 +2997,28 @@ def CouldBeFunction(clean_lines, line, linenum):
     line: The line the heuristic is analyzing
     linenum: The number of the line to check.
   """
-  if Match(r'\A\s*\S+\s\S+\(.*\)', line):
+
+  # virtual, if, else, const can break format, ignore during parsing
+  ignore_list = ['virtual', 'const', 'else', 'if']
+  parts = line.split(' ')
+  for ignore in ignore_list:
+    parts = [part for part in parts if part != ignore]
+
+  # throw can also break, but its harder because the (...) must be ignored too
+  for part in parts:
+    if Match(r'^throw\(.*\)$', part):
+      parts.remove(part)
+
+  line = ' '.join(parts)
+
+  if Match(r'\A\s*[^\s\(]+\s[^\s(]+\(.*\)', line):
     return True
   else:
-    if ')' in line and not '(' in line:
+    # Try again if params or return type split across lines
+    if (')' in line and not '(' in line) or Match(r'\A\s*[^\s\(]+\(.*\)', line):
       if linenum > 0:
         return CouldBeFunction(clean_lines,
-                               clean_lines.lines[linenum-1] + line, linenum-1)
+                               clean_lines.lines[linenum-1] + ' ' + line, linenum-1)
     return False
 
 def CheckBraces(filename, clean_lines, linenum, error):
@@ -3033,6 +3054,11 @@ def CheckBraces(filename, clean_lines, linenum, error):
     if CouldBeFunction(clean_lines, line.split('{')[0], linenum):
       error(filename, linenum, 'whitespace/braces', 3,
             '{ should not appear on the same line as a function definition')
+
+  if Search(r'.*\s{2,}\{.*', line):
+    # Warn if open brace is > 1 space away from something
+    error(filename, linenum, 'whitespace/braces', 3,
+          '{ should not be more than a space from non whitespace code')
 
   # An else clause should be on the same line as the preceding closing brace.
   if Match(r'\s*else\s*', line):
@@ -3987,11 +4013,6 @@ def CheckLanguage(filename, clean_lines, linenum, file_extension,
           'Did you mean "memset(%s, 0, %s)"?'
           % (match.group(1), match.group(2)))
 
-  if Search(r'\busing namespace\b', line):
-    error(filename, linenum, 'build/namespaces', 5,
-          'Do not use namespace using-directives.  '
-          'Use using-declarations instead.')
-
   # Detect variable-length arrays.
   match = Match(r'\s*(.+::)?(\w+) [a-z]\w*\[(.+)];', line)
   if (match and match.group(2) != 'return' and match.group(2) != 'delete' and
@@ -4251,11 +4272,6 @@ def CheckCStyleCast(filename, linenum, line, raw_line, cast_type, pattern,
           'All parameters should be named in a function')
     return True
 
-  # At this point, all that should be left is actual casts.
-  error(filename, linenum, 'readability/casting', 4,
-        'Using C-style cast.  Use %s<%s>(...) instead' %
-        (cast_type, match.group(1)))
-
   return True
 
 
@@ -4401,99 +4417,6 @@ def UpdateIncludeState(filename, include_state, io=codecs):
   return True
 
 
-def CheckForIncludeWhatYouUse(filename, clean_lines, include_state, error,
-                              io=codecs):
-  """Reports for missing stl includes.
-
-  This function will output warnings to make sure you are including the headers
-  necessary for the stl containers and functions that you use. We only give one
-  reason to include a header. For example, if you use both equal_to<> and
-  less<> in a .h file, only one (the latter in the file) of these will be
-  reported as a reason to include the <functional>.
-
-  Args:
-    filename: The name of the current file.
-    clean_lines: A CleansedLines instance containing the file.
-    include_state: An _IncludeState instance.
-    error: The function to call with any errors found.
-    io: The IO factory to use to read the header file. Provided for unittest
-        injection.
-  """
-  required = {}  # A map of header name to linenumber and the template entity.
-                 # Example of required: { '<functional>': (1219, 'less<>') }
-
-  for linenum in xrange(clean_lines.NumLines()):
-    line = clean_lines.elided[linenum]
-    if not line or line[0] == '#':
-      continue
-
-    # String is special -- it is a non-templatized type in STL.
-    matched = _RE_PATTERN_STRING.search(line)
-    if matched:
-      # Don't warn about strings in non-STL namespaces:
-      # (We check only the first match per line; good enough.)
-      prefix = line[:matched.start()]
-      if prefix.endswith('std::') or not prefix.endswith('::'):
-        required['<string>'] = (linenum, 'string')
-
-    for pattern, template, header in _re_pattern_algorithm_header:
-      if pattern.search(line):
-        required[header] = (linenum, template)
-
-    # The following function is just a speed up, no semantics are changed.
-    if not '<' in line:  # Reduces the cpu time usage by skipping lines.
-      continue
-
-    for pattern, template, header in _re_pattern_templates:
-      if pattern.search(line):
-        required[header] = (linenum, template)
-
-  # The policy is that if you #include something in foo.h you don't need to
-  # include it again in foo.cc. Here, we will look at possible includes.
-  # Let's copy the include_state so it is only messed up within this function.
-  include_state = include_state.copy()
-
-  # Did we find the header for this file (if any) and succesfully load it?
-  header_found = False
-
-  # Use the absolute path so that matching works properly.
-  abs_filename = FileInfo(filename).FullName()
-
-  # For Emacs's flymake.
-  # If cpplint is invoked from Emacs's flymake, a temporary file is generated
-  # by flymake and that file name might end with '_flymake.cc'. In that case,
-  # restore original file name here so that the corresponding header file can be
-  # found.
-  # e.g. If the file name is 'foo_flymake.cc', we should search for 'foo.h'
-  # instead of 'foo_flymake.h'
-  abs_filename = re.sub(r'_flymake\.cc$', '.cc', abs_filename)
-
-  # include_state is modified during iteration, so we iterate over a copy of
-  # the keys.
-  header_keys = include_state.keys()
-  for header in header_keys:
-    (same_module, common_path) = FilesBelongToSameModule(abs_filename, header)
-    fullpath = common_path + header
-    if same_module and UpdateIncludeState(fullpath, include_state, io):
-      header_found = True
-
-  # If we can't find the header file for a .cc, assume it's because we don't
-  # know where to look. In that case we'll give up as we're not sure they
-  # didn't include it in the .h file.
-  # TODO(unknown): Do a better job of finding .h files so we are confident that
-  # not having the .h file means there isn't one.
-  if filename.endswith('.cc') and not header_found:
-    return
-
-  # All the lines have been processed, report the errors found.
-  for required_header_unstripped in required:
-    template = required[required_header_unstripped][1]
-    if required_header_unstripped.strip('<>"') not in include_state:
-      error(filename, required[required_header_unstripped][0],
-            'build/include_what_you_use', 4,
-            'Add #include ' + required_header_unstripped + ' for ' + template)
-
-
 _RE_PATTERN_EXPLICIT_MAKEPAIR = re.compile(r'\bmake_pair\s*<')
 
 
@@ -4595,8 +4518,6 @@ def ProcessFileData(filename, file_extension, lines, error,
                 include_state, function_state, nesting_state, error,
                 extra_check_functions)
   nesting_state.CheckCompletedBlocks(filename, error)
-
-  CheckForIncludeWhatYouUse(filename, clean_lines, include_state, error)
 
   # We check here rather than inside ProcessLine so that we see raw
   # lines rather than "cleaned" lines.
