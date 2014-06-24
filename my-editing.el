@@ -29,10 +29,9 @@
                  (member major-mode '(emacs-lisp-mode lisp-mode
                                                       clojure-mode    scheme-mode
                                                       haskell-mode    ruby-mode
-                                                      rspec-mode      python-mode
+                                                      rspec-mode      plain-tex-mode
                                                       c-mode          c++-mode
-                                                      objc-mode       latex-mode
-                                                      plain-tex-mode))
+                                                      objc-mode       latex-mode))
                  (let ((mark-even-if-inactive transient-mark-mode))
                    (indent-region (region-beginning) (region-end) nil))))))
 
