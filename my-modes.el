@@ -4,6 +4,7 @@
 ;;; Code:
 
 (require 'flycheck-google-cpplint)
+
 (defun ej-python-mode ()
   (interactive)
   (python-mode) ; Enabled key bindings here:
@@ -11,6 +12,7 @@
   (setq tab-width 4)
   (which-function-mode 1)
   (setq indent-tabs-mode nil)
+  (setq whitespace-line-column 100)
   (whitespace-mode 1)
   (projectile-global-mode)
 
@@ -45,6 +47,8 @@
   (flycheck-mode)
 )
 
+
+
 ;;; Set the modes as default for the appropriate files
 (add-to-list 'auto-mode-alist '("\\.py\\'" . ej-python-mode))
 (add-to-list 'interpreter-mode-alist '("python" . ej-python-mode))
@@ -60,7 +64,7 @@
 (setq whitespace-style (quote (face tabs trailing space-before-tab tab-mark lines)))
 (setq windmove-wrap-around t)
 
-(add-hook 'c-mode-common-hook '(lambda ()
+(add-hook 'c++-mode-common-hook '(lambda ()
 				 ;; ac-omni-completion-sources is made buffer local so
 				 ;; you need to add it to a mode hook to activate on
 				 ;; whatever buffer you want to use it with.  This

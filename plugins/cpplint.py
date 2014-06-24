@@ -412,11 +412,16 @@ _ALT_TOKEN_REPLACEMENT_PATTERN = re.compile(
 
 # These constants define types of headers for use with
 # _IncludeState.CheckNextIncludeOrder().
+
 _C_SYS_HEADER = 1
 _CPP_SYS_HEADER = 2
-_LIKELY_MY_HEADER = 3
-_POSSIBLE_MY_HEADER = 4
-_OTHER_HEADER = 5
+_BOOST_HEADER = 3
+_TOON_HEADER = 4
+_HERA_HEADER = 5
+_FMV_HEADER = 6
+_LIKELY_MY_HEADER = 7
+_POSSIBLE_MY_HEADER = 8
+_OTHER_HEADER = 9
 
 # These constants define the current inline assembly state
 _NO_ASM = 0       # Outside of inline assembly block
@@ -552,20 +557,33 @@ class _IncludeState(dict):
   _MY_H_SECTION = 1
   _C_SECTION = 2
   _CPP_SECTION = 3
-  _OTHER_H_SECTION = 4
+  _BOOST_SECTION = 4
+  _TOON_SECTION = 5
+  _HERA_SECTION = 6
+  _FMV_SECTION = 7
+  _OTHER_H_SECTION = 8
 
   _TYPE_NAMES = {
       _C_SYS_HEADER: 'C system header',
       _CPP_SYS_HEADER: 'C++ system header',
+      _BOOST_HEADER: 'Boost system header',
+      _TOON_HEADER: 'TOON library header',
+      _HERA_HEADER: 'Hera library header',
+      _FMV_HEADER: 'FMV library header',
       _LIKELY_MY_HEADER: 'header this file implements',
       _POSSIBLE_MY_HEADER: 'header this file may implement',
       _OTHER_HEADER: 'other header',
-      }
+  }
+
   _SECTION_NAMES = {
       _INITIAL_SECTION: "... nothing. (This can't be an error.)",
       _MY_H_SECTION: 'a header this file implements',
       _C_SECTION: 'C system header',
       _CPP_SECTION: 'C++ system header',
+      _BOOST_SECTION: 'Boost system header',
+      _TOON_SECTION: 'TOON library header',
+      _HERA_SECTION: 'Hera library header',
+      _FMV_SECTION: 'FMV library header',
       _OTHER_H_SECTION: 'other header',
       }
 
