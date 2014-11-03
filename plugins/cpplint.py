@@ -2563,7 +2563,8 @@ def CheckSpacing(filename, clean_lines, linenum, nesting_state, error):
   ## MITRE Section ##
 
   and_and = '&&' in line
-  math = Search(r'.*=.*\*', line)
+  # Guess math if: contained into (), or ends with ;
+  math = Search(r'(?<!,)[(\s]{1}\S*\s\*\s\S*[();]{1}', line)
   boolean = Search(r'(\(\S+\s&\s\S+\))', line)
   should_check_line = '*' in clean_lines.elided[linenum] or '&' in clean_lines.elided[linenum]
 
