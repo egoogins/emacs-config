@@ -2793,13 +2793,14 @@ def CheckSpacing(filename, clean_lines, linenum, nesting_state, error):
           'Missing space before ( in %s' % match.group(1))
 
   # spaces should come before an assignment
-  match = Search(r'((?!(?<=[\s+-/*!=><]))=)', line)
+  match = Search(r'((?!(?<=[\s+-/*!=><\[|]))=)', line)
+  # Confirm not a lambda function '[=]'
   if match:
     print "matched: " + line
     error(filename, linenum, 'whitespace/operators', 5,
           'Missing space before assignment in %s' % match.group(1))
 
-  match = Search(r'(=(?![\s=]))', line)
+  match = Search(r'(=(?![\s=\]]))', line)
   if match and not Search(r'=$', line):
     print "match: " + line
     error(filename, linenum, 'whitespace/operators', 5,
