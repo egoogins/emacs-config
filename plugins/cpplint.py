@@ -3078,9 +3078,10 @@ def CheckBraces(filename, clean_lines, linenum, error):
             '{ should not appear on the same line as a function definition')
 
   if Search(r'.*\s{2,}\{.*', line):
-    # Warn if open brace is > 1 space away from something
-    error(filename, linenum, 'whitespace/braces', 3,
-          '{ should not be more than a space from non whitespace code')
+    # Warn if open brace is > 1 space away from something (other than newline)
+    if not Match(r'\s*{',line):
+      error(filename, linenum, 'whitespace/braces', 3,
+            '{ should not be more than a space from non whitespace code')
 
   # An else clause should be on the same line as the preceding closing brace.
   if Match(r'\s*else\s*', line):
