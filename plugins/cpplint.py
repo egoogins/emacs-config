@@ -2577,7 +2577,7 @@ def CheckSpacing(filename, clean_lines, linenum, nesting_state, error):
       error(filename, linenum, 'whitespace/operator', 4,
             'Should not have a space before * or &')
 
-    match = Search(r'(?<![=,<]\s)(?<![(])(?<!return\s)([*&][^\s),])', line)
+    match = Search(r'(?<![=,<]\s)(?<![(])(?<!return\s)([*&][^\s),>&])', line)
     if match:
       error(filename, linenum, 'whitespace/operator', 4,
             'Should have a space after * or &')
