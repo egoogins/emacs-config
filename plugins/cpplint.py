@@ -3033,7 +3033,7 @@ def CouldBeFunction(clean_lines, line, linenum):
 
   line = ' '.join(parts)
 
-  if Match(r'\A\s*[^\s\(]+\s[^\s(]+\(.*\)', line):
+  if Match(r'\A\s*[^\s\(]+\s+[^\s(]+\(.*\)', line):
     return True
   else:
     # Try again if params or return type split across lines
