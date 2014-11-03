@@ -2837,8 +2837,10 @@ def CheckSpacing(filename, clean_lines, linenum, nesting_state, error):
   # lines to confirm that those missing whitespaces are not due to
   # elided comments.
   if Search(r',[^,\s]', line) and Search(r',[^,\s]', raw[linenum]):
-    error(filename, linenum, 'whitespace/comma', 3,
-          'Missing space after ,')
+    # Choose to warn only if no template arguments also violating
+    if not Search(r'<.*,[^,\s].*>', line):
+      error(filename, linenum, 'whitespace/comma', 3,
+            'Missing space after ,')
 
   # You should always have a space after a semicolon
   # except for few corner cases
