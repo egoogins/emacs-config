@@ -3021,7 +3021,7 @@ def CouldBeFunction(clean_lines, line, linenum):
   """
 
   # virtual, if, else, const can break format, ignore during parsing
-  ignore_list = ['virtual', 'const', 'else', 'if']
+  ignore_list = ['virtual', 'const', 'else', 'if', 'inline']
   parts = line.split(' ')
   for ignore in ignore_list:
     parts = [part for part in parts if part != ignore]
