@@ -1412,13 +1412,14 @@ def GetHeaderGuardCPPVariable(filename):
   fileinfo = FileInfo(filename)
   file_path_from_root = fileinfo.RepositoryName()
 
-  # Format: libs/lib___/[___ or src]/path.../file
-  # Ignore libs and [___ or src]
+  # Format: libs/lib___/[___ or src]/path.../filename
+  # Ignore libs, [___ or src], and path...
   parts = file_path_from_root.split('/')
+  guard_parts = []
   if len(parts) >= 3:
-    del parts[2] # delete [___ or src]
-    del parts[0] # delete libs
-  file_path_from_root = '/'.join(parts)
+    guard_parts.append(parts[1]) # add lib___
+    guard_parts.append(parts[-1]) # add filename
+  file_path_from_root = '/'.join(guard_parts)
 
   return re.sub(r'[-./\s]', '_', file_path_from_root).upper()
 
@@ -1469,8 +1470,7 @@ def CheckForHeaderGuard(filename, lines, error):
           cppvar)
     return
 
-  # The guard should be PATH_FILE_H_, but we also allow PATH_FILE_H__
-  # for backward compatibility.
+  # The guard should be PATH_FILE_H
   if ifndef != cppvar:
     error_level = 0
     if ifndef != cppvar + '_':
