@@ -2572,13 +2572,14 @@ def CheckSpacing(filename, clean_lines, linenum, nesting_state, error):
   # acting on booleans, and in lines without &&
   if should_check_line and not and_and and not boolean and not math:
     # If prepended by =, or return, * is acting on following variable
-    match = Search(r'[^=,<](?<!return)\s[*&]', line)
-    if match:
+    match = Search(r'[^=,<](?<!return)\s[*&](?!=)', line)
+    # Confirm not assigning to a pointer with the second Match call
+    if match and not Match(r'\s*\*\S+', line):
       error(filename, linenum, 'whitespace/operator', 4,
             'Should not have a space before * or &')
 
-    match = Search(r'(?<![=,<]\s)(?<![(])(?<!return\s)([*&][^\s),>&])', line)
-    if match:
+    match = Search(r'(?<![=,<]\s)(?<![(])(?<!return\s)([*&][^\s),>&=])', line)
+    if match and not Match(r'\s*\*\S+', line):
       error(filename, linenum, 'whitespace/operator', 4,
             'Should have a space after * or &')
 
@@ -2793,14 +2794,14 @@ def CheckSpacing(filename, clean_lines, linenum, nesting_state, error):
           'Missing space before ( in %s' % match.group(1))
 
   # spaces should come before an assignment
-  match = Search(r'((?!(?<=[\s+-/*!=><\[|]))=)', line)
+  match = Search(r'(?<!operator)((?!(?<=[\s+-/&*!=><\[|]))=)', line)
   # Confirm not a lambda function '[=]'
   if match:
     print "matched: " + line
     error(filename, linenum, 'whitespace/operators', 5,
           'Missing space before assignment in %s' % match.group(1))
 
-  match = Search(r'(=(?![\s=\]]))', line)
+  match = Search(r'(?<!operator)(=(?![\s=\]]))', line)
   if match and not Search(r'=$', line):
     print "match: " + line
     error(filename, linenum, 'whitespace/operators', 5,
@@ -3021,7 +3022,7 @@ def CouldBeFunction(clean_lines, line, linenum):
   """
 
   # virtual, if, else, const can break format, ignore during parsing
-  ignore_list = ['virtual', 'const', 'else', 'if', 'inline']
+  ignore_list = ['virtual', 'const', 'else', 'if', 'inline', 'static']
   parts = line.split(' ')
   for ignore in ignore_list:
     parts = [part for part in parts if part != ignore]
