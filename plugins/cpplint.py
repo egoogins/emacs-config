@@ -28,17 +28,23 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""Does google-lint on c++ files.
+"""
+   The following is a modified version of the google style checking
+   script that aims to be consistent with the MITRE fmvot style
+   guidlines.
 
-The goal of this script is to identify places in the code that *may*
-be in non-compliance with google style.  It does not attempt to fix
-up these problems -- the point is to educate.  It does also not
-attempt to find all problems, or to ensure that everything it does
-find is legitimately a problem.
+   Currently known issues are:
+     -Parsing lambdas
+     -/* and // inside strings
 
-In particular, we can get very confused by /* and // inside strings!
-We do a small hack, which is to ignore //'s with "'s after them on the
-same line, but it is far from perfect (in either direction).
+   The goal of this script is to identify places in the code that *may*
+   be in non-compliance with our style.  It does not attempt to fix
+   up these problems -- the point is to educate.  It does also not
+   attempt to find all problems, or to ensure that everything it does
+   find is legitimately a problem.
+
+   This was created for use within EJ's emacs config
+   (https://github.com/egoogins/emacs-config.git)
 """
 
 import codecs
@@ -72,7 +78,8 @@ Syntax: cpplint.py [--verbose=#] [--output=vs7] [--filter=-x,+y,...]
 
   The files passed in will be linted; at least one file must be provided.
   Default linted extensions are .cc, .cpp, .cu, .cuh and .h.  Change the
-  extensions with the --extensions flag.
+  extensions with the --extensions flag. File may be a vaild directory, in which
+  all valid subfiles will be linted.
 
   Flags:
 
