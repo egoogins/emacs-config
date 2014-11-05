@@ -58,6 +58,7 @@ import string
 import sys
 import unicodedata
 
+import os
 
 _USAGE = """
 Syntax: cpplint.py [--verbose=#] [--output=vs7] [--filter=-x,+y,...]
@@ -4728,8 +4729,14 @@ def main():
 
   _cpplint_state.ResetErrorCounts()
   for filename in filenames:
-    ProcessFile(filename, _cpplint_state.verbose_level)
-  _cpplint_state.PrintErrorCounts()
+    if os.path.isdir(filename):
+      for root, dir, files in os.walk(filename):
+        for file in files:
+          print "file: " + str(os.path.join(root, file))
+          filenames.append(str(os.path.join(root, file)))
+    else:
+      ProcessFile(filename, _cpplint_state.verbose_level)
+      _cpplint_state.PrintErrorCounts()
 
   sys.exit(_cpplint_state.error_count > 0)
 
