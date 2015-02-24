@@ -27,5 +27,9 @@
 ;; disable ido faces to see flx highlights
 (setq ido-use-faces nil)
 
+;; Disable toolbar and scrollbar (not used in moving)
+(tool-bar-mode -1)
+(scroll-bar-mode -1)
+
 (provide 'my-moving)
 ;;; my-moving.el ends here
