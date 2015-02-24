@@ -29,6 +29,7 @@
 (require 'my-moving)
 (require 'my-modes)
 (require 'my-optimization)
+(require 'my-shortcuts)
 ;;; init.el ends here
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
