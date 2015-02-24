@@ -1423,11 +1423,10 @@ def GetHeaderGuardCPPVariable(filename):
   # Format: libs/lib___/[___ or src]/path.../filename
   # Ignore libs, [___ or src], and path...
   parts = file_path_from_root.split('/')
-  guard_parts = []
   if len(parts) >= 3:
-    guard_parts.append(parts[1]) # add lib___
-    guard_parts.append(parts[-1]) # add filename
-  file_path_from_root = '/'.join(guard_parts)
+    del parts[2] # delete [___ or src]
+    del parts[0] # delete libs/
+  file_path_from_root = '/'.join(parts)
 
   return re.sub(r'[-./\s]', '_', file_path_from_root).upper()
 
