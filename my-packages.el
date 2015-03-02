@@ -6,6 +6,7 @@
 
 ;; Require cl-lib to allow for latest emacs features
 (require 'cl-lib)
+
 (defvar my-packages '(
 		      autopair
 		      auto-complete

@@ -2184,17 +2184,18 @@ def CheckForNonStandardConstructs(filename, clean_lines, linenum,
   # The constructor and destructor will not have those qualifiers.
   base_classname = classinfo.name.split('::')[-1]
 
-  # Look for single-argument constructors that aren't marked explicit.
-  # Technically a valid construct, but against style.
-  args = Match(r'\s+(?:inline\s+)?%s\s*\(([^,()]+)\)'
-               % re.escape(base_classname),
-               line)
-  if (args and
-      args.group(1) != 'void' and
-      not Match(r'(const\s+)?%s(\s+const)?\s*(?:<\w+>\s*)?&'
-                % re.escape(base_classname), args.group(1).strip())):
-    error(filename, linenum, 'runtime/explicit', 5,
-          'Single-argument constructors should be marked explicit.')
+  # Disable single-arg explicit constructors since not part of fmv style
+  if False:
+    # Look for single-argument constructors that aren't marked explicit.
+    # Technically a valid construct, but against style.
+    args = Match(r'\s+(?:inline\s+)?%s\s*\(([^,()]+)\)'
+                 % re.escape(base_classname), line)
+    if (args and
+        args.group(1) != 'void' and
+        not Match(r'(const\s+)?%s(\s+const)?\s*(?:<\w+>\s*)?&'
+                  % re.escape(base_classname), args.group(1).strip())):
+      error(filename, linenum, 'runtime/explicit', 5,
+            'Single-argument constructors should be marked explicit.')
 
 
 def CheckSpacingForFunctionCall(filename, line, linenum, error):
